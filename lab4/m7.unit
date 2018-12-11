@@ -1,0 +1,40 @@
+#!/bin/bash
+
+echo $$ > m7.unit.pid
+
+accumulator="1"
+mode="+"
+
+usr1Handler() {
+	mode="+"
+}
+
+usr2Handler() {
+	mode="*"
+}
+
+segtermHandler() {
+	echo "SIGTERM CAUGHT. EXIT"
+	exit 0
+}
+
+trap "usr1Handler" USR1
+trap "usr2Handler" USR2
+trap "segtermHandler" SIGTERM
+
+while true; do
+
+	case $mode in
+	"+")
+		accumulator=$(echo "$accumulator + 2" | bc -l)
+		;;
+	"*")
+		accumulator=$(echo "$accumulator * 2" | bc -l)
+		;;
+	esac
+	echo $accumulator
+	sleep 1
+
+done
+
+

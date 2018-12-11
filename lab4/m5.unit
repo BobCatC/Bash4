@@ -1,0 +1,32 @@
+#!/bin/bash
+
+operation='+'
+accumulator='1'
+
+(tail -n0 -f m5.buffer) | 
+while true; do
+	read line
+	if [[ "$line" == '+' ]] || [[ "$line" == '*' ]]; then
+		operation="$line"
+	else 
+	
+		# tricky check if it's a number
+		if [ "$line" -eq "$line" ] 2>/dev/null; then
+			if [[ $operation == "+" ]]; then
+				accumulator=$(echo "$line + $accumulator" | bc -l)
+			else
+				accumulator=$(echo "$line * $accumulator" | bc -l)
+			fi
+			echo $accumulator
+		else
+			if [ "$line" == "QUIT" ]; then
+				echo "Quiting..."
+			else
+				echo "input data error"
+			fi
+			kill $(ps -e l | grep "tail -n0 -f m5.buffer" | awk '{print $3;}') 2>/dev/null
+			exit 0
+		fi
+	fi
+	#echo "$line : $operation : $accumulator"
+done

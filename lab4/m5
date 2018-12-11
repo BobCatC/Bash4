@@ -1,0 +1,12 @@
+#!/bin/bash
+
+echo "+" >> m5.buffer
+echo "1" >> m5.buffer
+echo "*" >> m5.buffer
+echo "10" >> m5.buffer
+echo "3" >> m5.buffer
+echo "+" >> m5.buffer
+echo "23" >> m5.buffer
+
+echo "QUIT" >> m5.buffer
+#echo "SOME_RUBBISH" >> m5.buffer

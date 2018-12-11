@@ -1,0 +1,11 @@
+#!/bin/bash
+
+(sleep 2s ; ./m1) &
+
+(tail -n0 -f ~/report) | 
+	while true; do
+		read line;
+		echo "------------- $line"
+
+	done
+

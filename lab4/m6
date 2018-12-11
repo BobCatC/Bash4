@@ -1,0 +1,13 @@
+#!/bin/bash
+
+pid=$(cat "m6.unit.pid")
+
+while true; do
+
+	read line
+	if [[ $line == "TERM" ]]; then
+		kill -SIGTERM $pid
+		exit 0
+	fi
+
+done

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+mkdir ~/test &&
+{
+ echo "catalog test was created successfully" > ~/report
+ date > ~/test/time_start
+}
+
+host="www.net_nikogo123.ru"
+ping -c1 "$host" || echo "host \"$host\" is unavailable" >> ~/report

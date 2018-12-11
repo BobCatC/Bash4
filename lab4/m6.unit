@@ -1,0 +1,26 @@
+#!/bin/bash
+
+echo $$ > m6.unit.pid
+echo "start"
+
+sigterm="0"
+sigtermHandler() {
+	sigterm="1"
+}
+
+trap "sigtermHandler" SIGTERM
+
+counter="0"
+while true; do
+	case "$sigterm" in
+	"0")
+		let "counter = $counter + 1"
+		;;
+	"1")
+		echo "SIGTERM CAUGHT"
+		exit 0
+		;;
+	esac
+	
+	sleep 1		
+done
