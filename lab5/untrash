@@ -1,0 +1,45 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+	echo "specify file name"
+	exit 1
+fi
+
+pathToUntrash=""
+nameInTrash=""
+
+IFS=$'\n'
+for line in $(cat ~/.trash.log); do
+
+	path=$(echo $line | awk '{print $1}')
+	name=$(echo $line | awk '{print $2}')
+	
+
+	if [[ $(basename $path) != $1 ]]; then
+		continue
+	fi
+	echo "This one? [y/n] $path"
+	read ans
+	if [[ $ans = "y" ]]; then
+		pathToUntrash=$path
+		nameInTrash=$name
+		break
+	fi
+done
+
+if [[ -z $pathToUntrash ]]; then
+	echo "Couldn't find your file"
+	exit 2
+fi
+
+ln ~/trash/$nameInTrash $pathToUntrash 2>/dev/null ||
+{
+	ln ~/trash/$nameInTrash ~/$(basename $pathToUntrash)
+	echo "couldn't restore to dir, but now it's in your home dir"
+}
+
+rm ~/trash/$nameInTrash
+
+content=$(cat ~/.trash.log | grep -Ev ".*$nameInTrash.*")
+echo $content > ~/.trash.log
+

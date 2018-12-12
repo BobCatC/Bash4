@@ -1,0 +1,91 @@
+#!/bin/bash
+
+if [ ! -d /home/user/source ]; then
+	echo "create /home/user/source dir"
+	exit 1
+fi
+
+backupDateRegex="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+
+let "today = $(date +%s) / 86400"
+echo $today
+
+backupDir=""
+
+
+backupDirMessage=""
+addedFilesMessage=""
+updatedFilesMessage=""
+
+for dirName in $(ls /home/user | grep -E "Backup-$backupDateRegex"); do
+	path="/home/user/$dirName"
+	dirDate=$(date -d $(echo $dirName | grep -Eo $backupDateRegex) +%s)
+	let "dirDate = $dirDate / 86400"
+	let "diff = $today - $dirDate"
+
+	echo "$path : $dirName : $dirDate : $diff days diff"
+	if [[ $diff < 7 ]]; then
+		backupDir=$dirName
+		break
+	fi
+done
+
+if [[ -z $backupDir ]]; then
+	backupDir="Backup-$(date +%F)"
+	backupPath="/home/user/$backupDir"
+	echo "creating new dir \"$backupPath\""
+
+	mkdir $backupPath || 
+	{
+		echo "Couldn't find and create backup dir"
+		exit 1
+	}
+	backupDirMessage="created new backup dir \"$backupPath\""
+else
+	backupDirMessage="using backup dir \"/home/user/$backupDir\""
+fi
+
+backupPath="/home/user/$backupDir"
+
+for filePath in $(find /home/user/source -maxdepth 1 -type f); do
+	backupFilePath=$backupPath/$(basename $filePath)
+
+	echo "-- $filePath : $backupFilePath"
+
+	if [ ! -f $backupFilePath ]; then
+		cp $filePath $backupFilePath
+		echo "---- new file, copied"
+		addedFilesMessage="$addedFilesMessage\n -- $(basename $filePath)"
+		continue
+	fi
+	
+	oldSize=$(du -b $backupFilePath | awk '{print $1}')
+	newSize=$(du -b $filePath | awk '{print $1}')
+	
+	echo "---- exists, source file size: $newSize bytes, backup file size: $oldSize bytes"
+
+	if [[ $oldSize = $newSize ]]; then 
+		echo "---- size is equal, no copiing"
+		continue
+	fi
+
+	oldFilePath="$backupFilePath.$(date +%F)"
+	mv $backupFilePath "$oldFilePath"
+	cp $filePath $backupFilePath
+	echo "---- size is different, copied"
+	updatedFilesMessage="$updatedFilesMessage\n -- $(basename $filePath) $(basename $oldFilePath)"
+	
+done
+
+if [[ -z $addedFilesMessage ]]; then
+	addedFilesMessage=" None"
+fi
+
+if [[ -z $updatedFilesMessage ]]; then
+	updatedFilesMessage=" None"
+fi
+
+reportPath="/home/user/backup-report"
+printf "\n$(date +%F)\n$backupDirMessage\n - Added files:$addedFilesMessage\n - updated files:$updatedFilesMessage\n" >> $reportPath
+
+

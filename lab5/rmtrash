@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [[ -z $1 ]]; then
+	echo "specify file name"
+	exit 1
+fi
+
+removePath=./$(basename ./$1)
+
+if [ ! -f $removePath ]; then 
+	echo "file does not exist"
+	exit 5
+fi
+
+if [[ $(dirname $removePath) != "." ]]; then
+	echo "file must be in the same dir"
+	exit 2
+fi
+
+if [ ! -d "$(dirname ~/trash)/trash" ]; then
+	mkdir ~/trash || 
+		{
+		echo "couldn't create trash dir" 
+		exit 3
+		}
+fi
+
+id=$(cat ~/rmtrash.counter)
+let "id = $id + 1"
+echo $id > ~/rmtrash.counter
+
+removeFullPath=$(pwd)/$(basename ./$1)
+trashName=$1_$id
+ln $removeFullPath ~/trash/$trashName || 
+{ 
+	echo "link creation error"
+	 exit 4
+}
+rm $removeFullPath
+
+echo "$removeFullPath $trashName" >> ~/.trash.log
+

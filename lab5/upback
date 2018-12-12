@@ -1,0 +1,38 @@
+#!/bin/bash
+
+backupDateRegex="[0-9]{4}-[0-9]{2}-[0-9]{2}"
+let "today = $(date +%s) / 86400"
+
+backupDir=""
+minDiff="100000"
+
+for dirName in $(ls /home/user | grep -E "Backup-$backupDateRegex"); do
+	dirDate=$(date -d $(echo $dirName | grep -Eo $backupDateRegex) +%s)
+	let "dirDate = $dirDate / 86400"
+	let "diff = $today - $dirDate"
+	
+	echo "$minDiff : $diff : $dirName"
+
+	if [[ $diff < $minDiff ]]; then
+		minDiff=$diff
+		backupDir=$dirName
+	fi
+done
+
+if [[ -z $backupDir ]]; then
+	echo "couldn't find any backup dir"
+	exit 1
+fi
+
+dirPath="/home/user/$dirName"
+filesInBackupDir=$(ls $dirPath)
+
+echo "restoring from $dirPath"
+
+for file in $(ls $dirPath); do
+	if [[ -z $(echo $file | grep -Ewo $backupDateRegex) ]]; then
+		echo "-- $file"
+		cp $dirPath/$file /home/user/restore/$file
+	fi
+done
+
