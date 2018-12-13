@@ -24,7 +24,7 @@ for dirName in $(ls /home/user | grep -E "Backup-$backupDateRegex"); do
 	let "diff = $today - $dirDate"
 
 	echo "$path : $dirName : $dirDate : $diff days diff"
-	if [[ $diff < 7 ]]; then
+	if (( $diff < 7 )); then
 		backupDir=$dirName
 		break
 	fi

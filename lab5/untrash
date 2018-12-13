@@ -15,7 +15,7 @@ for line in $(cat ~/.trash.log); do
 	name=$(echo $line | awk '{print $2}')
 	
 
-	if [[ $(basename $path) != $1 ]]; then
+	if [ $(basename $path) != $1 ]; then
 		continue
 	fi
 	echo "This one? [y/n] $path"
@@ -32,14 +32,24 @@ if [[ -z $pathToUntrash ]]; then
 	exit 2
 fi
 
+if [ ! -d $(dirname $pathToUntrash) ]; then
+	echo "Untrash dir does not exist $pathToUntrash"
+	pathToUntrash="$HOME/$(basename $pathToUntrash)"
+fi
+
+while ([ -d $pathToUntrash ] || [ -f $pathToUntrash ]); do
+	pathToUntrash="$pathToUntrash"1
+done
+
 ln ~/trash/$nameInTrash $pathToUntrash 2>/dev/null ||
 {
-	ln ~/trash/$nameInTrash ~/$(basename $pathToUntrash)
-	echo "couldn't restore to dir, but now it's in your home dir"
+	echo "couldn't restore, unknown error"
+	exit 3
 }
 
-rm ~/trash/$nameInTrash
+rm -- ~/trash/$nameInTrash
 
-content=$(cat ~/.trash.log | grep -Ev ".*$nameInTrash.*")
-echo $content > ~/.trash.log
+content=$(cat ~/.trash.log | grep -Ev -- "$nameInTrash")
 
+printf "$content\n" > ~/.trash.log
+echo "restored at path $pathToUntrash"
